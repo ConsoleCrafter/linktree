@@ -111,15 +111,35 @@ body {
 
 .music-player {
   position: fixed; top: 20px; left: 20px; z-index: 100;
-  background: rgba(20,20,20,.9); border: 1px solid var(--accent);
-  border-radius: 6px; padding: 8px 15px;
-  display: flex; align-items: center; gap: 12px;
-  backdrop-filter: blur(10px);
+  background: rgba(12,12,12,.65);
+  border: 1px solid rgba(255,51,51,.35);
+  border-radius: 999px; padding: 10px 20px 10px 16px;
+  display: flex; align-items: center; gap: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 18px rgba(255,51,51,.18);
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
-.volume-btn { background: none; border: 0; cursor: pointer; display: flex; }
-.volume-icon { width: 24px; height: 24px; fill: #fff; transition: transform .2s ease; }
-.volume-btn:hover .volume-icon { transform: scale(1.1); }
-.volume-slider { width: 100px; accent-color: var(--accent); cursor: pointer; }
+.music-player:hover { border-color: rgba(255,51,51,.7); box-shadow: 0 0 22px rgba(255,51,51,.35); }
+.volume-btn { background: none; border: 0; cursor: pointer; display: flex; border-radius: 50%; }
+.volume-icon { width: 22px; height: 22px; fill: #fff; transition: transform .2s ease, fill .2s ease; }
+.volume-btn:hover .volume-icon { transform: scale(1.12); fill: var(--accent); }
+.volume-slider {
+  --fill: 30%;
+  -webkit-appearance: none; appearance: none;
+  width: 110px; height: 5px; border-radius: 999px; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--accent) var(--fill), rgba(255,255,255,.22) var(--fill));
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+  background: #fff; border: 0; box-shadow: 0 0 8px rgba(255,51,51,.8);
+  transition: transform .15s ease;
+}
+.volume-slider::-moz-range-thumb {
+  width: 13px; height: 13px; border-radius: 50%; border: 0;
+  background: #fff; box-shadow: 0 0 8px rgba(255,51,51,.8);
+}
+.volume-slider::-moz-range-track { background: transparent; }
+.volume-slider:hover::-webkit-slider-thumb { transform: scale(1.2); }
 
 .credit {
   position: fixed; bottom: 10px; left: 0; width: 100%; z-index: 100;
@@ -132,7 +152,7 @@ body {
 @media (max-width: 600px) {
   .music-player { top: 10px; left: 10px; }
   .profile-name { font-size: 22px; }
-  .volume-slider { width: 80px; }
+  .volume-slider { width: 90px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -234,7 +254,8 @@ body {
 
   let volume = parseFloat(store.get('cc-volume'));
   if (!(volume >= 0 && volume <= 1)) volume = CFG.defaultVolume;
-  let lastVolume = volume > 0 ? volume : CFG.defaultVolume;
+  let lastVolume = parseFloat(store.get('cc-last-volume'));
+  if (!(lastVolume > 0 && lastVolume <= 1)) lastVolume = volume > 0 ? volume : CFG.defaultVolume;
 
   function setVolume(v, save = true) {
     volume = v;
@@ -242,7 +263,8 @@ body {
     slider.value = Math.round(v * 100);
     volIcon.innerHTML = v === 0 ? ICONS.mute : v < 0.5 ? ICONS.low : ICONS.high;
     volBtn.setAttribute('aria-label', v === 0 ? 'Ton einschalten' : 'Ton stummschalten');
-    if (v > 0) lastVolume = v;
+    slider.style.setProperty('--fill', Math.round(v * 100) + '%');
+    if (v > 0) { lastVolume = v; if (save) store.set('cc-last-volume', v); }
     if (save) store.set('cc-volume', v);
   }
   setVolume(volume, false);
